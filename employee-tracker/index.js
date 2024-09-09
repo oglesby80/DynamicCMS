@@ -46,6 +46,9 @@ async function mainMenu() {
         chalk.green('Add Role'),
         chalk.green('View All Departments'),
         chalk.green('Add Department'),
+        chalk.red('Delete Employee'),
+        chalk.red('Delete Role'),
+        chalk.red('Delete Department'),
         chalk.red('Exit')
       ],
     },
@@ -73,6 +76,15 @@ async function mainMenu() {
       break;
     case 'Add Department':
       await addDepartment();
+      break;
+    case 'Delete Employee':
+      await deleteEmployee();
+      break;
+    case 'Delete Role':
+      await deleteRole();
+      break;
+    case 'Delete Department':
+      await deleteDepartment();
       break;
     case 'Exit':
       client.end();
@@ -173,11 +185,11 @@ async function addRole() {
 // Function to view all departments
 async function viewDepartments() {
   try {
-    const res = await client.query('SELECT * FROM department;');
-    console.table(res.rows);
-    mainMenu();  // Return to main menu
+    const res = await client.query('SELECT * FROM department;');  // Query to select all departments
+    console.table(res.rows);  // Display the result in a formatted table
+    mainMenu();  // Return to the main menu after displaying the result
   } catch (error) {
-    console.error(chalk.red('Error viewing departments:'), error);
+    console.error(chalk.red('Error viewing departments:'), error);  // Log any errors
   }
 }
 
@@ -196,8 +208,114 @@ async function addDepartment() {
   }
 }
 
+// Function to delete an employee
+async function deleteEmployee() {
+  try {
+    const employeesRes = await client.query('SELECT id, first_name, last_name FROM employee;');
+    const employees = employeesRes.rows.map(emp => ({ name: `${emp.first_name} ${emp.last_name}`, value: emp.id }));
+
+    const { employeeId } = await inquirer.prompt([
+      { type: 'list', name: 'employeeId', message: 'Select the employee to delete:', choices: employees }
+    ]);
+
+    await client.query('DELETE FROM employee WHERE id = $1;', [employeeId]);
+    console.log(chalk.green('Employee deleted successfully.'));
+    mainMenu();  // Return to main menu
+  } catch (error) {
+    console.error(chalk.red('Error deleting employee:'), error);
+  }
+}
+
+// Function to delete a role
+async function deleteRole() {
+  try {
+    const rolesRes = await client.query('SELECT id, title FROM role;');
+    const roles = rolesRes.rows.map(role => ({ name: role.title, value: role.id }));
+
+    const { roleId } = await inquirer.prompt([
+      { type: 'list', name: 'roleId', message: 'Select the role to delete:', choices: roles }
+    ]);
+
+    // Check if there are any employees associated with this role
+    const employeesRes = await client.query('SELECT * FROM employee WHERE role_id = $1;', [roleId]);
+    if (employeesRes.rows.length > 0) {
+      // Prompt user to confirm deletion of associated employees
+      const { confirmDeleteEmployees } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmDeleteEmployees',
+          message: `There are employees associated with this role. Do you want to delete these employees as well?`,
+          default: false
+        }
+      ]);
+
+      if (confirmDeleteEmployees) {
+        // Delete associated employees
+        await client.query('DELETE FROM employee WHERE role_id = $1;', [roleId]);
+        console.log(chalk.green('Associated employees deleted successfully.'));
+      } else {
+        console.log(chalk.yellow('Deletion canceled. Role still has associated employees.'));
+        return mainMenu();  // Return to main menu
+      }
+    }
+
+    // Delete the role after associated employees are deleted or if there were no employees
+    await client.query('DELETE FROM role WHERE id = $1;', [roleId]);
+    console.log(chalk.green('Role deleted successfully.'));
+    mainMenu();  // Return to main menu
+
+  } catch (error) {
+    console.error(chalk.red('Error deleting role:'), error);
+  }
+}
+
+// Function to delete a department
+async function deleteDepartment() {
+  try {
+    const departmentsRes = await client.query('SELECT id, name FROM department;');
+    const departments = departmentsRes.rows.map(dept => ({ name: dept.name, value: dept.id }));
+
+    const { departmentId } = await inquirer.prompt([
+      { type: 'list', name: 'departmentId', message: 'Select the department to delete:', choices: departments }
+    ]);
+
+    // Check if there are any roles associated with this department
+    const rolesRes = await client.query('SELECT * FROM role WHERE department_id = $1;', [departmentId]);
+    if (rolesRes.rows.length > 0) {
+      // Prompt user to confirm deletion of associated roles
+      const { confirmDeleteRoles } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmDeleteRoles',
+          message: `There are roles associated with this department. Do you want to delete these roles as well?`,
+          default: false
+        }
+      ]);
+
+      if (confirmDeleteRoles) {
+        // Delete associated roles
+        await client.query('DELETE FROM role WHERE department_id = $1;', [departmentId]);
+        console.log(chalk.green('Associated roles deleted successfully.'));
+      } else {
+        console.log(chalk.yellow('Deletion canceled. Department still has associated roles.'));
+        return mainMenu();  // Return to main menu
+      }
+    }
+
+    // Delete the department after associated roles are deleted or if there were no roles
+    await client.query('DELETE FROM department WHERE id = $1;', [departmentId]);
+    console.log(chalk.green('Department deleted successfully.'));
+    mainMenu();  // Return to main menu
+
+  } catch (error) {
+    console.error(chalk.red('Error deleting department:'), error);
+  }
+}
 // Start the application
 mainMenu();
+
+
+
 
 
 
