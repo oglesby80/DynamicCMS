@@ -21,7 +21,7 @@ Clone the Repository:
 
 bash
 Copy code
-git clone <repository-url>
+git clone <https://github.com/oglesby80/DynamicCMSl
 cd employee-tracker
 Install Dependencies:
 
