@@ -8,11 +8,11 @@ const { Client } = pkg; // Destructure Client from the default import
 
 // PostgreSQL client setup
 const client = new Client({
-  user: 'postgres', // Replace with your actual PostgreSQL username
-  host: 'localhost',
-  database: 'company', // Make sure this is your actual database name
-  password: '2264', // Replace with the correct password
-  port: 5432,
+  user: process.env.DB_USER,  // Use environment variable for PostgreSQL username
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,  // Use environment variable for database name
+  password: process.env.DB_PASSWORD,  // Use environment variable for password
+  port: process.env.DB_PORT
 });
 
 client.connect();
