@@ -1,17 +1,17 @@
-import pkg from 'pg'; // Import 'pg' as a package
+import pkg from 'pg'; 
 import inquirer from 'inquirer';
-import chalk from 'chalk'; // Use import instead of require
+import chalk from 'chalk'; 
 import figlet from 'figlet';
-import Table from 'cli-table'; // Use 'cli-table' for better table display
+import Table from 'cli-table'; 
 
-const { Client } = pkg; // Destructure Client from the default import
+const { Client } = pkg; 
 
 // PostgreSQL client setup
 const client = new Client({
-  user: process.env.DB_USER,  // Use environment variable for PostgreSQL username
+  user: process.env.DB_USER,  
   host: process.env.DB_HOST,
-  database: process.env.DB_NAME,  // Use environment variable for database name
-  password: process.env.DB_PASSWORD,  // Use environment variable for password
+  database: process.env.DB_NAME,  /
+  password: process.env.DB_PASSWORD,  
   port: process.env.DB_PORT
 });
 
@@ -72,13 +72,13 @@ async function viewRoles() {
 // Function to view all departments
 async function viewDepartments() {
   try {
-    const res = await client.query('SELECT * FROM department;'); // Query to select all departments
+    const res = await client.query('SELECT * FROM department;'); 
     const columns = ['ID', 'Name'];
-    displayTable(res.rows, columns); // Display the result in a formatted table
+    displayTable(res.rows, columns);
   } catch (error) {
-    console.error(chalk.red('Error viewing departments:'), error); // Log any errors
+    console.error(chalk.red('Error viewing departments:'), error); 
   } finally {
-    await mainMenu(); // Return to the main menu after displaying the result
+    await mainMenu(); 
   }
 }
 
@@ -93,7 +93,7 @@ async function addEmployee() {
       name: `${emp.first_name} ${emp.last_name}`,
       value: emp.id,
     }));
-    managers.push({ name: 'None', value: null }); // Add a 'None' option for no manager
+    managers.push({ name: 'None', value: null }); 
 
     const { firstName, lastName, roleId, managerId } = await inquirer.prompt([
       { type: 'input', name: 'firstName', message: 'Enter employee first name:' },
@@ -112,7 +112,7 @@ async function addEmployee() {
   } catch (error) {
     console.error(chalk.red('Error adding employee:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu(); 
   }
 }
 
@@ -135,7 +135,7 @@ async function updateEmployeeRole() {
   } catch (error) {
     console.error(chalk.red('Error updating employee role:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu(); 
   }
 }
 
@@ -156,7 +156,7 @@ async function addRole() {
   } catch (error) {
     console.error(chalk.red('Error adding role:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu();
   }
 }
 
@@ -170,7 +170,7 @@ async function addDepartment() {
   } catch (error) {
     console.error(chalk.red('Error adding department:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu(); 
   }
 }
 
@@ -189,7 +189,7 @@ async function deleteEmployee() {
   } catch (error) {
     console.error(chalk.red('Error deleting employee:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu(); 
   }
 }
 
@@ -203,13 +203,13 @@ async function deleteRole() {
       { type: 'list', name: 'roleId', message: 'Select the role to delete:', choices: roles },
     ]);
 
-    await client.query('UPDATE employee SET role_id = NULL WHERE role_id = $1;', [roleId]); // Reassign or set to NULL
+    await client.query('UPDATE employee SET role_id = NULL WHERE role_id = $1;', [roleId]);
     await client.query('DELETE FROM role WHERE id = $1;', [roleId]);
     console.log(chalk.green('Role deleted successfully.'));
   } catch (error) {
     console.error(chalk.red('Error deleting role:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu();
   }
 }
 
@@ -239,7 +239,7 @@ async function deleteDepartment() {
         console.log(chalk.green('Associated roles deleted successfully.'));
       } else {
         console.log(chalk.yellow('Deletion canceled. Department still has associated roles.'));
-        return mainMenu(); // Return to main menu
+        return mainMenu(); 
       }
     }
 
@@ -248,19 +248,19 @@ async function deleteDepartment() {
   } catch (error) {
     console.error(chalk.red('Error deleting department:'), error);
   } finally {
-    await mainMenu(); // Return to main menu
+    await mainMenu(); 
   }
 }
 
 // Main Menu
 async function mainMenu() {
-  showBanner(); // Show the ASCII art header
+  showBanner(); 
 
   const { choice } = await inquirer.prompt([
     {
       type: 'list',
       name: 'choice',
-      message: chalk.blueBright('What would you like to do?'), // Add color to the message
+      message: chalk.blueBright('What would you like to do?'),
       choices: [
         chalk.green('View All Employees'),
         chalk.green('Add Employee'),
@@ -278,7 +278,7 @@ async function mainMenu() {
   ]);
 
   // Remove chalk formatting to match function names
-  switch (choice.replace(/\x1B\[\d+m/g, '')) { // Remove color formatting for comparisons
+  switch (choice.replace(/\x1B\[\d+m/g, '')) { 
     case 'View All Employees':
       await viewEmployees();
       break;
